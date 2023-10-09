@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <title>Chart</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
+        :root {
+            --bg: #184248;
+            --accent: #EFF36D;
+            --black: #041114;
+            --white: #FCFCFC;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Roboto Mono", sans-serif;
+            color: var(--black);
+        }
+
+        body {
+            background-color: var(--white);
+        }
+
+        #app {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            height: 100vh;
+        }
+
+        #quadratic {
+            background-color: var(--white);
+            border: 3px solid var(--black);
+            border-radius: 25px;
+            width: 550px;
+            height: 350px;
+        }
+
+        #form {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 25px;
+            background-color: var(--bg);
+            border-radius: 25px;
+            height: 350px;
+        }
+
+        input,
+        select,
+        button,
+        option {
+            padding: 5px;
+            width: 200px;
+            font-size: 16px;
+            outline: none;
+            border: none;
+            border-radius: 5px;
+            background: var(--white);
+            transition: 0.3s;
+            color: var(--black);
+            opacity: 1;
+            font-weight: bold;
+        }
+
+        input::placeholder {
+            color: var(--black);
+            opacity: 1;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            transition: 0.3s;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <div id="quadratic"></div>
+        <div id="form">
+            <select name="" id="select">
+                <option value="1">Метод левых прямоугольников</option>
+                <option value="2">Метод правых прямоугольников</option>
+                <option value="3">Метод средних прямоугольников</option>
+                <option value="4">Метод трапеций</option>
+                <option value="5">Метод Симпсона</option>
+                <!-- <option value="6">Метод Гаусса</option> -->
+            </select>
+            <input type="text" name="" id="func" placeholder="Функция">
+            <input type="text" name="" id="a" placeholder="a">
+            <input type="text" name="" id="b" placeholder="b">
+            <input type="text" name="" id="n" placeholder="Число отрезков">
+            <button onclick="solve()">Решить</button>
+        </div>
+    </div>
+
+    
+    <script src="https://unpkg.com/function-plot/dist/function-plot.js"></script>
+    <script>
+        function solve() {
+            let opt = document.querySelector("#select").value
+            switch (opt) {
+                case "1":
+                    leftSq()
+                    break;
+                case "2":
+                    rightSq()
+                    break;
+                case "3":
+                    centerSq()
+                    break;
+                case "4":
+                    trapezoid()
+                    break;
+                case "5":
+                    simpson()
+                    break;
+                default:
+                    console.log(opt)
+                    break;
+            }
+        }
+        function f(prompt, x) {
+            let temp = document.querySelector("#quadratic")
+            temp.innerHTML = ""
+            prompt = prompt.replace("log", "Math.log")
+            prompt = prompt.replace("cos", "Math.cos")
+            prompt = prompt.replace("sqrt", "Math.sqrt")
+            prompt = prompt.replace("sin", "Math.sin")
+            prompt = prompt.replace("^", "**")
+            return eval(prompt)
+        }
+        function leftSq() {
+            let func = document.querySelector("#func").value
+            let a = parseFloat(document.querySelector("#a").value)
+            let b = parseFloat(document.querySelector("#b").value)
+            let n = parseFloat(document.querySelector("#n").value)
+            let step = (b - a) / n
+            let d = {
+                points: [],
+                fnType: 'points',
+                graphType: 'polyline',
+            }
+            let i = a
+            for (; i + step < b; i += step) {
+                d.points.push([i, 0], [i, f(func, i)], [i + step, f(func, i)], [i + step, 0])
+            }
+            d.points.push([i, 0], [i, f(func, i)], [b, f(func, i)], [b, 0])
+            functionPlot({
+                target: '#quadratic',
+                data: [{
+                    fn: func,
+                    range: [a, b],
+                },
+                    d]
+            })
+        }
+        function rightSq() {
+            let func = document.querySelector("#func").value
+            let a = parseFloat(document.querySelector("#a").value)
+            let b = parseFloat(document.querySelector("#b").value)
+            let n = parseFloat(document.querySelector("#n").value)
+            let step = (b - a) / n
+            let d = {
+                points: [],
+                fnType: 'points',
+                graphType: 'polyline',
+            }
+            let i = b
+            for (; i - step > a; i -= step) {
+                d.points.push([i, 0], [i, f(func, i)], [i - step, f(func, i)], [i - step, 0])
+            }
+            d.points.push([i, 0], [i, f(func, i)], [a, f(func, i)], [a, 0])
+            functionPlot({
+                target: '#quadratic',
+                data: [{
+                    fn: func,
+                    range: [a, b],
+                },
+                    d]
+            })
+        }
+        function centerSq() {
+            let func = document.querySelector("#func").value
+            let a = parseFloat(document.querySelector("#a").value)
+            let b = parseFloat(document.querySelector("#b").value)
+            let n = parseFloat(document.querySelector("#n").value)
+            let step = (b - a) / n
+            let d = {
+                points: [],
+                fnType: 'points',
+                graphType: 'polyline',
+            }
+            let i = a
+            for (; i + step < b; i += step) {
+                d.points.push([i, 0], [i, f(func, i + step / 2)], [i + step, f(func, i + step / 2)], [i + step, 0])
+            }
+            d.points.push([i, 0], [i, f(func, i + step / 2)], [b, f(func, i + step / 2)], [b, 0])
+            functionPlot({
+                target: '#quadratic',
+                data: [{
+                    fn: func,
+                    range: [a, b],
+                },
+                    d]
+            })
+        }
+        function getParabola(x1, y1, x2, y2, x3, y3) {
+            denom = (x1 - x2) * (x1 - x3) * (x2 - x3);
+            A = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denom;
+            B = (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) / denom;
+            C = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / denom;
+            return `${A}x*x+${B}x+${C}`
+        }
+
+        function trapezoid() {
+            let func = document.querySelector("#func").value
+            let a = parseFloat(document.querySelector("#a").value)
+            let b = parseFloat(document.querySelector("#b").value)
+            let n = parseFloat(document.querySelector("#n").value)
+            let step = (b - a) / n
+            let d = {
+                points: [],
+                fnType: 'points',
+                graphType: 'polyline',
+            }
+            let i = a
+            for (; i + step < b; i += step) {
+                d.points.push([i, 0], [i, f(func, i)], [i + step, f(func, i + step)], [i + step, 0])
+            }
+            d.points.push([i, 0], [i, f(func, i)], [b, f(func, b)], [b, 0])
+            functionPlot({
+                target: '#quadratic',
+                data: [{
+                    fn: func,
+                    range: [a, b],
+                },
+                    d]
+            })
+        }
+        function simpson() {
+            let func = document.querySelector("#func").value
+            let a = parseFloat(document.querySelector("#a").value)
+            let b = parseFloat(document.querySelector("#b").value)
+            let n = parseFloat(document.querySelector("#n").value)
+            if (n % 2 == 1) n++
+            let step = (b - a) / n
+            let plot = {
+                target: '#quadratic',
+                data: [{
+                    fn: func,
+                    range: [a, b],
+                }]
+            }
+            for (let i = a; i + step + step <= b; i += step + step) {
+                temp = {
+                    fn: getParabola(i, f(func, i), i + step, f(func, i + step), i + step + step, f(func, i + step + step)),
+                    range: [i, i + step + step],
+                }
+                plot.data.push(temp)
+                // plot.data.push(
+                //    {
+                //         points: [
+                //             [i, 0],
+                //             [i, f(func, i)]
+                //         ],
+                //         fnType: 'points',
+                //         graphType: 'polyline',
+                //     }
+                // )
+                // plot.data.push(
+                //     {
+                //         points: [
+                //             [i+step+step, 0],
+                //             [i + step + step, f(func, i + step + step)]
+                //         ],
+                //         fnType: 'points',
+                //         graphType: 'polyline',
+                //     }
+                // )
+                
+            }
+            functionPlot(plot)
+        }
+
+    </script>
+
+    <script>
+
+    </script>
+</body>
+
+</html>

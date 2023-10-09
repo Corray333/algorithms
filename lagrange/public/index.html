@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <title>Chart</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
+        :root {
+            --bg: #184248;
+            --accent: #EFF36D;
+            --black: #041114;
+            --white: #FCFCFC;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Roboto Mono", sans-serif;
+            color: var(--black);
+        }
+
+        body {
+            background-color: var(--white);
+        }
+
+        #app {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+            height: 100vh;
+        }
+
+        #quadratic {
+            background-color: var(--white);
+            border: 3px solid var(--black);
+            border-radius: 25px;
+            width: 550px;
+            height: 350px;
+        }
+
+        #form {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 25px;
+            background-color: var(--bg);
+            border-radius: 25px;
+            height: 350px;
+        }
+
+        input,
+        select,
+        button,
+        option {
+            padding: 5px;
+            width: 200px;
+            font-size: 16px;
+            outline: none;
+            border: none;
+            border-radius: 5px;
+            background: var(--white);
+            transition: 0.3s;
+            color: var(--black);
+            opacity: 1;
+            font-weight: bold;
+        }
+
+        input::placeholder {
+            color: var(--black);
+            opacity: 1;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            transition: 0.3s;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <div id="quadratic"></div>
+        <div id="form">
+            <input type="text" name="" id="func" placeholder="Функция">
+            <input type="text" name="" id="a" placeholder="a">
+            <input type="text" name="" id="b" placeholder="b">
+            <input type="text" name="" id="n" placeholder="n">
+            <div>
+                <input type="radio" id="first" name="type" value="1" checked />
+                <label for="first">Равностоящие узлы</label>
+            </div>
+            
+            <div>
+                <input type="radio" id="second" name="type" value="2" />
+                <label for="second">Метод чебышева</label>
+            </div>
+            <button onclick="solve()">Построить</button>
+        </div>
+    </div>
+
+    
+    <script src="https://unpkg.com/function-plot/dist/function-plot.js"></script>
+    <script>
+        
+        function f(prompt, x) {
+            let temp = document.querySelector("#quadratic")
+            temp.innerHTML = ""
+            prompt = prompt.replace("log", "Math.log")
+            prompt = prompt.replace("cos", "Math.cos")
+            prompt = prompt.replace("sqrt", "Math.sqrt")
+            prompt = prompt.replace("sin", "Math.sin")
+            prompt = prompt.replace("^", "**")
+            return eval(prompt)
+        }
+        function Lagrange(x, xValues, yValues){
+            lagrangePol = 0
+            for (let i = 0; i<xValues.length; i++){
+                basicsPol = 1
+                for (let j = 0; j<xValues.length; j++){
+                    if (i!=j) basicsPol *= (x - xValues[j]) / (xValues[i] - xValues[j])
+                }
+                lagrangePol += basicsPol * yValues[i];
+            }
+            return lagrangePol
+        }
+        setInterval(() => {
+            document.querySelectorAll(".scatter").forEach((el) => {
+                el.setAttribute("r", "5")
+            })
+        }, 1);
+        function solve() {
+            let type = document.querySelector("#first").checked
+            let func = document.querySelector("#func").value
+            let a = parseFloat(document.querySelector("#a").value)
+            let b = parseFloat(document.querySelector("#b").value)
+            let n = parseFloat(document.querySelector("#n").value)
+            let step = (b - a) / n
+            let xValues = []
+            let yValues = []
+            if (type){
+                for (let i = a; i <= b; i += step) {
+                    xValues.push(i)
+                    yValues.push(f(func, i))
+                }
+            } else{
+                if (a != -1 || b!=1) {
+                    alert("Введен неверный диапазон. Для метода Чебышева диапазон должен быть от -1 до 1.")
+                    return
+                }
+                for (let i = 1; i <= n; i += step) {
+                    xValues.push(Math.cos(((2*i-1)*Math.PI)/(2*n)))
+                    yValues.push(f(func, xValues[xValues.length-1]))
+                }
+            }
+            
+            let d = {
+                points: [],
+                fnType: 'points',
+                graphType: 'polyline',
+            }
+            let d1 = {
+                points: [],
+                fnType: 'points',
+                graphType: 'scatter',
+                color: "000000"
+            }
+            for (let i = a; i <= b; i += step) {
+                d1.points.push([i, f(func, i)])
+                if (i>=b) break;
+                for (let j = i; j<=i+step && j<=b; j+=step/20){
+                    d.points.push([j, Lagrange(j, xValues, yValues)])
+                    console.log(j)
+                }                
+            }
+            if (d.points[d.points.length - 1][0] < b) d.points.push([b, Lagrange(b, xValues, yValues)])
+            functionPlot({
+                target: '#quadratic',
+                data: [{
+                    fn: func,
+                    range: [a, b],
+                },
+                    d,
+                    d1 
+                ]
+            })
+        }
+        
+
+    </script>
+
+    <script>
+
+    </script>
+</body>
+
+</html>
