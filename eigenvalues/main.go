@@ -3,78 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"math/rand"
+	"os"
+	"strconv"
+	"strings"
 )
-
-// // func Jacobi(a [][]float64, n int) ([][]float64, [][]float64) {
-// // 	const maxIterations = 100
-// // 	const eps = 1e-9
-
-// // 	v := make([][]float64, n)
-// // 	for i := range v {
-// // 		v[i] = make([]float64, n)
-// // 		for j := range v[i] {
-// // 			if i == j {
-// // 				v[i][j] = 1.0
-// // 			}
-// // 		}
-// // 	}
-
-// // 	for k := 0; k < maxIterations; k++ {
-// // 		m := 0
-// // 		n := 1
-// // 		for i := 0; i < len(a); i++ {
-// // 			for j := i + 1; j < len(a); j++ {
-// // 				if math.Abs(a[i][j]) > math.Abs(a[m][n]) {
-// // 					m = i
-// // 					n = j
-// // 				}
-// // 			}
-// // 		}
-
-// // 		if math.Abs(a[m][n]) < eps {
-// // 			return a, v
-// // 		}
-
-// // 		d := (a[n][n] - a[m][m]) / (2 * a[m][n])
-// // 		t := 1.0 / (math.Abs(d) + math.Sqrt(d*d+1))
-// // 		if d < 0 {
-// // 			t = -t
-// // 		}
-// // 		c := 1.0 / math.Sqrt(t*t+1)
-// // 		s := t * c
-// // 		tau := s / (1.0 + c)
-// // 		temp := a[m][n]
-// // 		a[m][n] = 0
-// // 		a[m][m] -= t * temp
-// // 		a[n][n] += t * temp
-// // 		for i := 0; i < m; i++ {
-// // 			temp = a[i][m]
-// // 			a[i][m] -= s * (a[i][n] + tau*temp)
-// // 			a[i][n] += s * (temp - tau*a[i][m])
-// // 		}
-// // 		for i := m + 1; i < n; i++ {
-// // 			temp = a[m][i]
-// // 			a[m][i] -= s * (a[i][n] + tau*temp)
-// // 			a[i][n] += s * (temp - tau*a[m][i])
-// // 		}
-// // 		for i := n + 1; i < len(a); i++ {
-// // 			temp = a[m][i]
-// // 			a[m][i] -= s * (a[n][i] + tau*temp)
-// // 			a[n][i] += s * (temp - tau*a[m][i])
-// // 		}
-// // 		for i := 0; i < len(a); i++ {
-// // 			temp = v[i][m]
-// // 			v[i][m] -= s * (v[i][n] + tau*temp)
-// // 			v[i][n] += s * (temp - tau*v[i][m])
-// // 		}
-// // 	}
-
-// // 	fmt.Println("Jacobi method did not converge")
-// // 	return nil, nil
-// // }
 
 func multiplyMatrices(matrix1 [][]float64, matrix2 [][]float64) [][]float64 {
 	rows1 := len(matrix1)
@@ -106,7 +42,8 @@ func multiplyMatrices(matrix1 [][]float64, matrix2 [][]float64) [][]float64 {
 	return result
 }
 
-func Rotations(matrix [][]float64, eps float64) ([][]float64, error) {
+func Rotations(matrix [][]float64) ([]float64, error) {
+	eps := 0.001
 	if len(matrix) != len(matrix[0]) {
 		return nil, errors.New("Метод вращений не подходит для данного типа матриц.")
 	}
@@ -133,7 +70,11 @@ func Rotations(matrix [][]float64, eps float64) ([][]float64, error) {
 			}
 		}
 		if math.Abs(max) < eps {
-			return matrix, nil
+			res := make([]float64, len(matrix))
+			for i := 0; i < len(matrix); i++ {
+				res[i] = matrix[i][i]
+			}
+			return res, nil
 		}
 		var tau float64
 		if matrix[i][i] == matrix[j][j] {
@@ -211,7 +152,7 @@ func inverseMatrix(matrix [][]float64) [][]float64 {
 	return result
 }
 
-func itaretions(matrix [][]float64) float64 {
+func itaretions(matrix [][]float64) ([]float64, error) {
 	r := make([][]float64, len(matrix))
 	for i := 0; i < len(matrix); i++ {
 		r[i] = make([]float64, 1)
@@ -224,7 +165,7 @@ func itaretions(matrix [][]float64) float64 {
 		r = multiplyMatrices(matrix, r)
 		mu = multiplyVectors(tempR, r) / multiplyVectors(tempR, tempR)
 	}
-	return mu
+	return []float64{mu}, nil
 
 }
 
@@ -236,25 +177,40 @@ func multiplyVectors(v1 [][]float64, v2 [][]float64) float64 {
 	return res
 }
 
-func main() {
-	m := [][]float64{
-		{1, math.Sqrt(2), 2},
-		{5, 3, math.Sqrt(2)},
-		{2, math.Sqrt(2), 1},
+func GetMatrix() [][]float64 {
+	file, err := os.Open("matrix.txt")
+	if err != nil {
+		fmt.Println(err)
 	}
-	// m := [][]float64{
-	// 	{-1, -6},
-	// 	{2, 6},
-	// }
-	res, err := Rotations(m, 0.001)
+	text, err := io.ReadAll(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+	rows := strings.Split(string(text), "\n")
+	var matrixStr [][]string
+	for _, row := range rows {
+		matrixStr = append(matrixStr, strings.Split(row, " "))
+	}
+	matrix := make([][]float64, len(matrixStr))
+	for i := 0; i < len(matrixStr); i++ {
+		matrix[i] = make([]float64, len(matrixStr[i]))
+		for j := 0; j < len(matrixStr[i]); j++ {
+			matrix[i][j], _ = strconv.ParseFloat(matrixStr[i][j], 64)
+		}
+	}
+
+	return matrix
+}
+
+func main() {
+	m := GetMatrix()
+	res, err := Rotations(m)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for i := 0; i < len(m); i++ {
-		for j := 0; j < len(m); j++ {
-			fmt.Printf("%.3f\t", res[i][j])
-		}
-		fmt.Println()
+	file, _ := os.Create("result.txt")
+	for i := 0; i < len(res); i++ {
+		file.Write([]byte(fmt.Sprintf("l%d = %.3f\n", i, res[i])))
 	}
-	// fmt.Print(itaretions(m))
+	file.Close()
 }
