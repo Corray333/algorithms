@@ -157,14 +157,11 @@
                     yValues.push(f(func, i))
                 }
             } else{
-                if (a != -1 || b!=1) {
-                    alert("Введен неверный диапазон. Для метода Чебышева диапазон должен быть от -1 до 1.")
-                    return
-                }
-                for (let i = 1; i <= n; i += step) {
-                    xValues.push(Math.cos(((2*i-1)*Math.PI)/(2*n)))
+                for (let i = 1; i <= n; i++) {
+                    xValues.push((b+a)/2+(b-a)/2*Math.cos(((2*i-1)*Math.PI)/(2*n)))
                     yValues.push(f(func, xValues[xValues.length-1]))
                 }
+                console.log(xValues)
             }
             
             let d = {
@@ -178,14 +175,26 @@
                 graphType: 'scatter',
                 color: "000000"
             }
-            for (let i = a; i <= b; i += step) {
-                d1.points.push([i, f(func, i)])
-                if (i>=b) break;
-                for (let j = i; j<=i+step && j<=b; j+=step/20){
-                    d.points.push([j, Lagrange(j, xValues, yValues)])
-                    console.log(j)
-                }                
+            if(type){
+                for (let i = a; i <= b; i += step) {
+                    d1.points.push([i, f(func, i)])
+                    if (i>=b) break;
+                    for (let j = i; j<=i+step && j<=b; j+=step/20){
+                        d.points.push([j, Lagrange(j, xValues, yValues)])
+                    }                
+                }
+            } else{
+                for (let i of xValues){
+                    d1.points.push([i, f(func, i)])
+                }
+                for (let i = a; i <= b; i += step) {
+                    if (i>=b) break;
+                    for (let j = i; j<=i+step && j<=b; j+=step/20){
+                        d.points.push([j, Lagrange(j, xValues, yValues)])
+                    }                
+                }
             }
+            
             if (d.points[d.points.length - 1][0] < b) d.points.push([b, Lagrange(b, xValues, yValues)])
             functionPlot({
                 target: '#quadratic',

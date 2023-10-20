@@ -46,7 +46,7 @@ func Jakoby(a [][]float64, b []float64) []float64 {
 	return x
 }
 
-func Down(a [][]float64, nb []float64) []float64 {
+func Gradient(a [][]float64, nb []float64) []float64 {
 	b := make([][]float64, len(nb))
 	u := make([][]float64, len(nb))
 	for i := 0; i < len(nb); i++ {
@@ -153,10 +153,10 @@ func GetMatrix() ([][]float64, []float64) {
 
 func main() {
 	a, b := GetMatrix()
-	x := Jakoby(a, b)
+	x := Gradient(a, b)
 	file, _ := os.Create("result.txt")
-	for _, i := range x {
-		file.Write([]byte(fmt.Sprintf("%.4f ", i)))
+	for i, j := range x {
+		file.Write([]byte(fmt.Sprintf("X%d = %.4f\n", i, j)))
 	}
 	file.Close()
 }
