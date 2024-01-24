@@ -356,8 +356,8 @@
           function Newton(xValues, yValues, x) {
             h = xValues[1] - xValues[0]
             res = [yValues[0]];
-            for (let i = yValues.length - 2; i > -1; i--) {
-                rec = yValues[i + 1];
+            for (let i = yValues.length - 1; i > 0; i--) {
+                rec = yValues[i];
                 for (let j = i; j > -1; j--) {
                     temp = yValues[j];
                     yValues[j] = rec - yValues[j];
@@ -365,7 +365,7 @@
                 }
                 res.push(yValues[0]);
             }
-            y = 0;
+            let y = 0;
             for (let i = 0; i < res.length; i++){
                 res[i] /= factorialize(i)*(h**i)
                 temp = res[i]
@@ -374,7 +374,6 @@
                 }
                 y += temp
             }
-            console.log(xValues, yValues, x, y)
             return y
           }
 
@@ -513,6 +512,7 @@
                         d.points.push([A, B])
                     }                
                 }
+                d.points.push([b, f(func, b)])
                 functionPlot({
                     target: '#quadratic',
                     width: 900,
