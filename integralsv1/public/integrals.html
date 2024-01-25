@@ -100,6 +100,9 @@
         #info>h1{
             color: white;
         }
+        #form>p{
+            color: white;
+        }
         .modal-wrapper{
             position: absolute;
             height: 100vh;
@@ -246,10 +249,9 @@
             let i = a
             for (; i + step < b; i += step) {
                 d.points.push([i, 0], [i, f(func, i)], [i + step, f(func, i)], [i + step, 0])
-                res += f(func, i) * step
             }
-            if (i<b){
-                res += f(func, b) * (b-i)
+            for (let i = 0; i<n; i++){
+                res += f(func, a+i*step)*step
             }
             const result = document.querySelector("#resultField")
             result.innerHTML = `Результат: ${res.toFixed(3)}`
@@ -278,11 +280,12 @@
             let res = 0
             for (; i - step > a; i -= step) {
                 d.points.push([i, 0], [i, f(func, i)], [i - step, f(func, i)], [i - step, 0])
-                res += f(func, i) * step
             }
             if (i>a){
                 d.points.push([i, 0], [i, f(func, i)], [a, f(func, i)], [a, 0])
-                res += f(func, a) * (i-a)
+            }
+            for (let i = n; i>0; i--){
+                res += f(func, a+i*step)*step
             }
             const result = document.querySelector("#resultField")
             result.innerHTML = `Результат: ${res.toFixed(3)}`
@@ -310,11 +313,12 @@
             let res = 0.0
             for (; i + step < b; i += step) {
                 d.points.push([i, 0], [i, f(func, i + step / 2)], [i + step, f(func, i + step / 2)], [i + step, 0])
-                res += f(func, i + step / 2) * step
             }
             if (i<b){
                 d.points.push([i, 0], [i, f(func, i + step / 2)], [b, f(func, i + step / 2)], [b, 0])
-                res += f(func, b-(b-i)/2) * (b-i)
+            }
+            for (let i = 0; i<n; i++){
+                res += f(func, a+i*step+step/2)*step
             }
             const result = document.querySelector("#resultField")
             result.innerHTML = `Результат: ${res.toFixed(3)}`
@@ -351,6 +355,12 @@
                 d.points.push([i, 0], [i, f(func, i)], [i + step, f(func, i + step)], [i + step, 0])
             }
             d.points.push([i, 0], [i, f(func, i)], [b, f(func, b)], [b, 0])
+            let res = 0.0
+            for (let i = 0; i<n; i++){
+                res += step*(f(func, a+i*step)+f(func, a+i*step+step))/2
+            }
+            const result = document.querySelector("#resultField")
+            result.innerHTML = `Результат: ${res.toFixed(3)}`
             functionPlot({
                 target: '#quadratic',
                 data: [{
@@ -383,7 +393,7 @@
             }
             let sum = 0.0
             for (let i = 0; i < n; i++) {
-                sum += (step/6)*(f(func, a+i*step)+4*f(func, a+i*step/2) + f(func, a+(i+1)*step))
+                sum += (step/6)*(f(func, a+i*step)+4*f(func, a+i*step + step/2) + f(func, a+(i+1)*step))
             }
             const result = document.querySelector("#resultField")
             result.innerHTML = `Результат: ${sum.toFixed(3)}`
